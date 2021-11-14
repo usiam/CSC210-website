@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<div class="row">
+ <div class="col-4">
+  <div class="card" style="width: 18rem;">
+   <img class="card-img-top"
+    src="https://cdn1-smxvrtas6mc3o.stackpathdns.com/wp-content/uploads/2019/01/SW_Chicken_Salad_VERT_02.jpeg"
+    alt="Card image cap">
+   <div class="card-body">
+    <p class="card-text" style="  text-align: center;">{{food.name}}
+    </p>
+   </div>
+  </div>
+ </div>
+ <div class="col-8">
+  <div class="content-section pt-4">
+   <form method="POST" action="">
+    {{form.hidden_tag()}}
+    <fieldset class="form-group">
+
+     <div class="form-group">
+      {{form.content.label(class='form-control-label')}} {% if form.content.errors
+      %} {{form.content(class='form-control form-control-lg is-invalid')}}
+      <div class="invalid-feedback">
+       {% for error in form.content.errors %}
+       <span> {{error}}</span>
+       {% endfor %}
+      </div>
+      {% else %} {{form.content(class='form-control form-control-lg')}} {% endif
+      %}
+     </div>
+    </fieldset>
+    <div class="form-group">
+     {{ form.submit(class="btn btn-outline-info") }}
+    </div>
+   </form>
+  </div>
+  Other Reviews:
+  {% for post in food.post%}
+  <article class="media content-section">
+   <img class='rounded-circle article-img'
+    src="https://www.kindpng.com/picc/m/24-248253_user-profile-default-image-png-clipart-png-download.png">
+   <div class="media-body">
+    <div class="article-metadata">
+     <a class="mr-2">{{ post.author.username }}</a>
+     <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+    </div>
+    <p class="article-content">{{ post.content }}</p>
+   </div>
+  </article>
+  {% endfor %}
+ </div>
+</div>
+
+
+
+
+{% endblock %}
