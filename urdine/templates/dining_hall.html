@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<h1 class='mt-4 mb-4 border-bottom'>{{hall_name}}</h1>
+
+<section>
+ <div class="row" style="padding-bottom: 40px;">
+  {% for station in stations %}
+  <div class="col-6">
+   <h3>{{station.name}}</h3>
+   <ul class="list-group list-group-horizontal">
+    {% for food in station.food %}
+    <li class="list-group-item alignleft">{{food.name}}<a href="{{url_for('review_food', food_id=food.id)}}"
+      class="alignright"> Review</a></li>
+    {% endfor %}
+   </ul>
+  </div>
+  {% endfor %}
+ </div>
+</section>
+
+
+
+{% endblock %}
