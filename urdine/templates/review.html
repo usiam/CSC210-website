@@ -9,12 +9,32 @@
     src="https://cdn1-smxvrtas6mc3o.stackpathdns.com/wp-content/uploads/2019/01/SW_Chicken_Salad_VERT_02.jpeg"
     alt="Card image cap">
    <div class="card-body">
-    <p class="card-text" style="  text-align: center;">{{food.name}}
+    <p class="card-text" style="  text-align: center; font-weight: bold; font-size: 1.5rem;">{{food.name}}
     </p>
    </div>
   </div>
  </div>
  <div class="col-8">
+  <p style="  text-align: center; font-weight: bold; font-size: 1.5rem;">Reviews
+  </p>
+  {% if food.post %}
+  {% for post in food.post%}
+  <article class="media content-section">
+   <img class='rounded-circle article-img'
+    src="https://www.kindpng.com/picc/m/24-248253_user-profile-default-image-png-clipart-png-download.png">
+   <div class="media-body">
+    <div class="article-metadata">
+     <a class="mr-2">{{ post.author.username }}</a>
+     <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+    </div>
+    <p class="article-content">{{ post.content }}</p>
+   </div>
+  </article>
+  {% endfor %}
+  {% else %}
+  <article class="media content-section">No past reviews</article>
+  {% endif %}
+
   <div class="content-section pt-4">
    <form method="POST" action="">
     {{form.hidden_tag()}}
@@ -33,24 +53,13 @@
      </div>
     </fieldset>
     <div class="form-group">
-     {{ form.submit(class="btn btn-outline-info") }}
+     {{ form.submit(class="btn-sm btn-outline-info") }}
     </div>
    </form>
   </div>
-  Other Reviews:
-  {% for post in food.post%}
-  <article class="media content-section">
-   <img class='rounded-circle article-img'
-    src="https://www.kindpng.com/picc/m/24-248253_user-profile-default-image-png-clipart-png-download.png">
-   <div class="media-body">
-    <div class="article-metadata">
-     <a class="mr-2">{{ post.author.username }}</a>
-     <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
-    </div>
-    <p class="article-content">{{ post.content }}</p>
-   </div>
-  </article>
-  {% endfor %}
+
+
+
  </div>
 </div>
 
