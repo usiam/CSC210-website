@@ -1,14 +1,15 @@
 import os
 import secrets
+import pyotp
 from PIL import Image
-
 from datetime import datetime
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, flash, redirect, request, abort,jsonify, make_response
 from urdine.forms import RegistrationForm, LoginForm, UpdateForm, PostForm, RequestResetForm, ResetPasswordForm
 from urdine import app, db, bcrypt, mail
 from urdine.models import User, Post, Hall, Station, Food
 from flask_login import login_required, login_user, current_user, logout_user
 from flask_mail import Message
+
 
 @app.route('/')
 def home():
@@ -34,10 +35,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form, title='Register')
 
-
-
 # LOGIN LOGIC
-
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if current_user.is_authenticated:
@@ -49,14 +47,12 @@ def login():
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get(
                 'next')  # to redirect to the page the user wanted to access before being asked to login
+            # return login_2fa(next_page=next_page)
             return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
             flash(f"Login Unsuccessful! Check username and password", 'danger')
     return render_template('login.html', form=form, title='Login')
 
-# ACCOUNT LOGIC
-
-# Put the latest comment on your review in the sidebar maybe?
 
 def save_picture(pic):
     random_hex = secrets.token_hex(8)
@@ -90,8 +86,6 @@ def account():
         form.email.data = current_user.email
     image_file = url_for('static', filename=f'images/{current_user.image_file}')
     return render_template('account.html', title='Account', image_file=image_file, form=form)
-
-
 
 
 # LOGOUT LOGIC
@@ -149,9 +143,11 @@ def reset_password(token:str):
         return redirect(url_for('login'))
     return render_template('reset_password.html', title='Reset Password', form=form)
 
+
 @app.route('/dininghall/<int:hall_id>')
 def go_to_hall(hall_id:int):
     hall = Hall.query.get_or_404(hall_id)
+    print(hall.name, hall.station)
     return render_template('dining_hall.html', hall_name=hall.name, stations = hall.station)
 
 
@@ -159,11 +155,71 @@ def go_to_hall(hall_id:int):
 @login_required
 def review_food(food_id):
     form = PostForm()
-    food = Food.query.get_or_404(food_id)
+    food = Food.query.filter_by(id=food_id).first()
+    print(food)
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.filter_by(food=str(food.id)).order_by(Post.date_posted.desc()).paginate(page=page, per_page=3)
+    # raise RuntimeError
+    print(posts)
     if form.validate_on_submit():
         post = Post(content=form.content.data, food=food_id, user_id=current_user.id)
         db.session.add(post)
         db.session.commit()
         flash("Review added", "success")
         return redirect(url_for('review_food', food_id=food.id))
-    return render_template('review.html', form=form, food=food, posts = food.post)
+    return render_template('review.html', form=form, food=food, posts = posts)
+
+
+@app.route('/review/<post_id>/delete', methods=['POST'])
+@login_required
+def delete_review(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.author != current_user:
+        abort(403)
+    db.session.delete(post)
+    db.session.commit()
+    flash('Your review has been deleted', 'success')
+    return redirect(url_for('review_food', food_id=int(post.food)))
+
+
+############# API 
+
+@app.route('/reviews/<hall_name>/<station_name>/<food_name>', methods=['GET'])
+def get_reviews(hall_name, station_name, food_name):
+    hall = Hall.query.filter_by(name=hall_name).first()
+    station = Station.query.filter_by(hall_id=hall.id).first()
+    foods = Food.query.filter_by(station_id=station.id).all()
+    map = {f'{food.name}': food.post for food in foods}
+    reviews = [f"{review.author.username} ({review.date_posted.strftime('%Y-%m-%d')}) - {review.content}" for review in map[food_name]]
+    return jsonify({food_name: reviews})
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+@app.route('/reviews/1', methods=['POST'])
+def test():
+    return jsonify({'review': 1})
+
+@app.route('/review/<hall_name>/<station_name>/<food_name>', methods=['POST'])
+def create_review(hall_name, station_name, food_name):
+    print('x')
+    if not request.json or not 'username' in request.json or not 'password' in request.json:
+        abort(400)
+    review_content = {
+        'username': request.json['username'],
+        'password': request.json['password'],
+        'content': request.json['content'],
+    }
+    
+    user = User.query.filter_by(username=review_content['username']).first()
+    if user and bcrypt.check_password_hash(user.password, review_content['password']):
+        # raise RuntimeError
+        food = Food.query.filter_by(name=food_name).first()
+        review = Post(content=review_content['content'], food=str(food.id), user_id=user.id)
+        db.session.add(review)
+        db.session.commit()
+    else:
+        return jsonify({'error': 'User not in database'})
+
+    return jsonify({'review': review.content}), 201
