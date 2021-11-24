@@ -1,8 +1,0 @@
-1) Build the database
-2) Paginate stations and reviews pages (at least paginate reviews) (DONE)
-3) Fix the RESTful API (DONE)
-4) Hosting on Heroku 
-5) Fix all the images on the website
-
-
-

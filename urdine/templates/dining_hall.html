@@ -11,7 +11,7 @@
       <h3>{{station.name}}</h3>
       <ul class="list-group list-group-horizontal">
         {% for food in station.food %}
-        <li class="list-group-item alignleft">{{food.name}}<a href="{{url_for('review_food', food_id=food.id)}}"
+        <li class="list-group-item alignleft">{{food.name}}<a href="{{url_for('posts.review_food', food_id=food.id)}}"
             class="alignright"> Review</a></li>
         {% endfor %}
       </ul>
