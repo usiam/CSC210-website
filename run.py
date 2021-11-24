@@ -1,4 +1,6 @@
-from urdine import app
+from urdine import create_app
+
+app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, port=7000)
