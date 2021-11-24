@@ -5,7 +5,7 @@ from datetime import datetime
 main = Blueprint('main', __name__)
 
 
-@main.route('')
+@main.route('/')
 def home():
     return render_template('index.html', currYear=datetime.now().year)
 
