@@ -21,8 +21,9 @@
   <p style="  text-align: center; font-weight: bold; font-size: 1.5rem;">Reviews
   </p>
 
-
+  {% if current_user.is_authenticated %}
   <div class="content-section pt-4">
+
    <form method="POST" action="">
     {{form.hidden_tag()}}
     <fieldset class="form-group">
@@ -44,6 +45,14 @@
     </div>
    </form>
   </div>
+
+  {% else %}
+  <div class="content-section">
+   <small class="text-muted ml-2"><a href="{{url_for('users.login')}}">Login</a> to leave a review</small>
+  </div>
+
+
+  {% endif %}
 
   {% if posts.items %}
   {% for post in posts.items%}

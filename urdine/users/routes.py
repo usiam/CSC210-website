@@ -5,10 +5,11 @@ from urdine import db, bcrypt
 import os
 from urdine.models import User, Post
 from urdine.users.forms import (RegistrationForm, LoginForm, UpdateForm,
-                                   RequestResetForm, ResetPasswordForm)
+                                RequestResetForm, ResetPasswordForm)
 from urdine.users.utils import save_picture, send_reset_email
 
 users = Blueprint('users', __name__)
+
 
 @users.route('/register', methods=['GET', 'POST'])
 def register():
@@ -16,15 +17,20 @@ def register():
         return redirect(url_for('main.home'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user = User(username=form.username.data, email=form.email.data, password=hashed_pw)
+        hashed_pw = bcrypt.generate_password_hash(
+            form.password.data).decode('utf-8')
+        user = User(username=form.username.data,
+                    email=form.email.data, password=hashed_pw)
         db.session.add(user)
         db.session.commit()
-        flash(f"Account created for {form.username.data}! You are now able to log in.", "success")
+        flash(
+            f"Account created for {form.username.data}! You are now able to log in.", "success")
         return redirect(url_for('users.login'))
     return render_template('register.html', form=form, title='Register')
 
 # LOGIN LOGIC
+
+
 @users.route('/login', methods=['POST', 'GET'])
 def login():
     if current_user.is_authenticated:
@@ -35,12 +41,12 @@ def login():
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get(
-                'next')  # to redirect to the page the user wanted to access before being asked to login
-            # return login_2fa(next_page=next_page)
+                'next')
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:
             flash(f"Login Unsuccessful! Check username and password", 'danger')
     return render_template('login.html', form=form, title='Login')
+
 
 @users.route('/logout')
 def logout():
@@ -55,7 +61,8 @@ def account():
     if form.validate_on_submit():
         if form.picture.data:
             if current_user.image_file != 'default.jpg':
-                os.remove(os.path.join(app.root_path, 'static/images', current_user.image_file))
+                os.remove(os.path.join(app.root_path,
+                          'static/images', current_user.image_file))
             picture_file = save_picture(form.picture.data)
             current_user.image_file = picture_file
         current_user.username = form.username.data
@@ -66,7 +73,8 @@ def account():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    image_file = url_for('static', filename=f'images/{current_user.image_file}')
+    image_file = url_for(
+        'static', filename=f'images/{current_user.image_file}')
     return render_template('account.html', title='Account', image_file=image_file, form=form)
 
 
@@ -85,7 +93,7 @@ def reset_request():
 
 
 @users.route("/reset_password/<string:token>", methods=['GET', 'POST'])
-def reset_password(token:str):
+def reset_password(token: str):
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
 
@@ -96,10 +104,10 @@ def reset_password(token:str):
 
     form = ResetPasswordForm()
     if form.validate_on_submit():
-        hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        hashed_pw = bcrypt.generate_password_hash(
+            form.password.data).decode('utf-8')
         user.password = hashed_pw
         db.session.commit()
         flash("Your password has been updated. You can now login!", "success")
         return redirect(url_for('users.login'))
     return render_template('reset_password.html', title='Reset Password', form=form)
-
