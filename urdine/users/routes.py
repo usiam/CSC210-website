@@ -1,5 +1,5 @@
 
-from flask import render_template, url_for, flash, redirect, request, Blueprint
+from flask import render_template, url_for, flash, redirect, request, Blueprint, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from urdine import db, bcrypt
 import os
@@ -61,7 +61,7 @@ def account():
     if form.validate_on_submit():
         if form.picture.data:
             if current_user.image_file != 'default.jpg':
-                os.remove(os.path.join(app.root_path,
+                os.remove(os.path.join(current_app.root_path,
                           'static/images', current_user.image_file))
             picture_file = save_picture(form.picture.data)
             current_user.image_file = picture_file
